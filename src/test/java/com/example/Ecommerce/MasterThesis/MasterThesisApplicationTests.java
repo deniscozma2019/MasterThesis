@@ -1,4 +1,4 @@
-package com.example.RestaurantManagementSystem.MasterThesis;
+package com.example.Ecommerce.MasterThesis;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
