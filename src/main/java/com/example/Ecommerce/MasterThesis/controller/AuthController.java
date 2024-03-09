@@ -7,72 +7,50 @@ import com.example.Ecommerce.MasterThesis.entity.User;
 import com.example.Ecommerce.MasterThesis.repository.UserRepository;
 import com.example.Ecommerce.MasterThesis.services.auth.AuthService;
 import com.example.Ecommerce.MasterThesis.utils.JwtUtil;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import java.io.IOException;
-import java.util.Optional;
+
 
 @RestController
-@RequiredArgsConstructor
 @EnableWebSecurity
-
+@RequiredArgsConstructor
 public class AuthController {
 
-    private static final String HEADER_STRING = "Authorization" ;
-    private static final String TOKEN_PREFIX = "Bearer";
-    private final AuthenticationManager authenticationManager;
 
-    private final UserDetailsService userDetailsService;
+    @Autowired
+    private AuthService authenticationService;
 
-    private final UserRepository userRepository;
-
-    private final JwtUtil jwtUtil;
-
-    private final AuthService authService;
 
     @PostMapping("/authenticate")
-    public void createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest,
-                                          HttpServletResponse response) throws JSONException, IOException {
+    public ResponseEntity<String> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(),
-                    authenticationRequest.getPassword()));
+            String response = authenticationService.authenticateUser(authenticationRequest);
+            return ResponseEntity.ok(response);
+        } catch (AuthenticationException | JSONException e) {
+            HttpStatus status = e instanceof UsernameNotFoundException ? HttpStatus.NOT_FOUND : HttpStatus.UNAUTHORIZED;
+            return ResponseEntity.status(status).body(e.getMessage());
         }
-        catch (BadCredentialsException e){
-            throw new BadCredentialsException("Incorrect username or password.");
-        }
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
-        Optional<User> optionalUser = userRepository.findFirstByEmail(userDetails.getUsername());
-
-        final String jwt = jwtUtil.generateToken(userDetails.getUsername());
-
-        if(optionalUser.isPresent()){
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("userId", optionalUser.get().getId());
-            jsonObject.put("role", optionalUser.get().getRole().toString());
-            response.getWriter().write(jsonObject.toString());
-        }
-        response.addHeader(HEADER_STRING, TOKEN_PREFIX+jwt);
     }
+
 
     @PostMapping("/sign-up")
     public ResponseEntity<?> signupUser(@RequestBody SignupRequest signupRequest){
-        if (authService.hasUserWithEmail(signupRequest.getEmail())){
+        if (authenticationService.hasUserWithEmail(signupRequest.getEmail())){
             return new ResponseEntity<>("User already exist", HttpStatus.NOT_ACCEPTABLE);
         }
-        UserDTO userDTO = authService.createUser(signupRequest);
+        UserDTO userDTO = authenticationService.createUser(signupRequest);
 
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
