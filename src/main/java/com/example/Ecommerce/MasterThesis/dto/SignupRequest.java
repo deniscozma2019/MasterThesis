@@ -1,6 +1,4 @@
 package com.example.Ecommerce.MasterThesis.dto;
-
-import com.example.Ecommerce.MasterThesis.enums.UserRole;
 import lombok.Data;
 
 @Data

@@ -6,7 +6,7 @@ import com.example.Ecommerce.MasterThesis.dto.UserDTO;
 import org.json.JSONException;
 
 public interface AuthService {
-    public UserDTO createUser(SignupRequest signupRequest);
+     UserDTO createUser(SignupRequest signupRequest);
 
     Boolean hasUserWithEmail(String email);
 

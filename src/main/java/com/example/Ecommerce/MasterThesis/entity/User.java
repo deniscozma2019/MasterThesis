@@ -36,8 +36,6 @@ public class User {
     @Column(columnDefinition = "longblob")
     private byte[] img;
 
-
-
     public void setId(Long id) {
         this.id = id;
     }

@@ -26,6 +26,8 @@ import java.util.Optional;
 @Service
 public class AuthServiceImpl  implements  AuthService{
 
+    private final AuthenticationConfiguration authenticationConfiguration;
+
     private AuthenticationManager authenticationManager;
 
     @Autowired
@@ -40,12 +42,19 @@ public class AuthServiceImpl  implements  AuthService{
     private static final String HEADER_STRING = "Authorization" ;
     private static final String TOKEN_PREFIX = "Bearer";
 
+    @Autowired
+    @Lazy
+    public AuthenticationManager authenticationManager() throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
     public AuthServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, AuthenticationConfiguration authenticationConfiguration){
         this.userRepository = userRepository;
 
         this.authenticationConfiguration = authenticationConfiguration;
 
     }
+
 
 
     public UserDTO createUser(SignupRequest signupRequest){
@@ -65,12 +74,7 @@ public class AuthServiceImpl  implements  AuthService{
 
 
     }
-    @Autowired
-    @Lazy
-    public AuthenticationManager authenticationManager() throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
-    private final AuthenticationConfiguration authenticationConfiguration;
+
 
 
     @Override
