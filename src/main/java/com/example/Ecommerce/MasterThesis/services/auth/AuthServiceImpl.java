@@ -7,6 +7,8 @@ import com.example.Ecommerce.MasterThesis.entity.User;
 import com.example.Ecommerce.MasterThesis.enums.UserRole;
 import com.example.Ecommerce.MasterThesis.repository.UserRepository;
 import com.example.Ecommerce.MasterThesis.utils.JwtUtil;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +26,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class AuthServiceImpl  implements  AuthService{
+public  class AuthServiceImpl  implements  AuthService{
 
     private final AuthenticationConfiguration authenticationConfiguration;
 
@@ -56,17 +58,13 @@ public class AuthServiceImpl  implements  AuthService{
     }
 
 
-
     public UserDTO createUser(SignupRequest signupRequest){
         User user = new User();
-
         user.setEmail(signupRequest.getEmail());
         user.setUserName(signupRequest.getUserName());
         user.setPassword(new BCryptPasswordEncoder().encode(signupRequest.getPassword()));
         user.setRole(UserRole.Costumer);
-
         User createdUser = userRepository.save(user);
-
         UserDTO userDTO = new UserDTO();
         userDTO.setId(createdUser.getId());
 
@@ -82,13 +80,15 @@ public class AuthServiceImpl  implements  AuthService{
         return userRepository.findFirstByEmail(email).isPresent();
     }
 
-    public String authenticateUser(AuthenticationRequest authenticationRequest) throws JSONException {
+
+
+    public String authenticateUser(AuthenticationRequest authenticationRequest/*, HttpServletResponse response*/) throws JSONException {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 authenticationRequest.getUsername(), authenticationRequest.getPassword()));
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
         Optional<User> optionalUser = userRepository.findFirstByEmail(((UserDetails) userDetails).getUsername());
-
+        final String jwt = jwtUtil.generateToken(userDetails.getUsername());
         if (optionalUser.isPresent()) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("userId", optionalUser.get().getId());
@@ -97,7 +97,22 @@ public class AuthServiceImpl  implements  AuthService{
             jsonObject.put("token", token);
             return jsonObject.toString();
         }
+     //   response.addHeader(HEADER_STRING, TOKEN_PREFIX+jwt);
         throw new UsernameNotFoundException("User not found");
+    }
+    @PostConstruct
+    public void  createAdminAdminAccount(){
+        User adminAccount = userRepository.findByRole(UserRole.ADMIN);
+        if (null==adminAccount){
+            User user = new User();
+            user.setEmail("admin@gmail.com");
+            user.setUserName("Admin");
+            user.setFirstName("admin");
+            user.setLastName("admin");
+            user.setPassword(new BCryptPasswordEncoder().encode("123456789"));
+            userRepository.save(user);
+
+        }
     }
 
 

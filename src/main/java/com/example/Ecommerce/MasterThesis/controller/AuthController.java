@@ -3,9 +3,11 @@ package com.example.Ecommerce.MasterThesis.controller;
 import com.example.Ecommerce.MasterThesis.dto.AuthenticationRequest;
 import com.example.Ecommerce.MasterThesis.dto.SignupRequest;
 import com.example.Ecommerce.MasterThesis.dto.UserDTO;
+
 import com.example.Ecommerce.MasterThesis.services.auth.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +28,6 @@ public class AuthController {
     @Autowired
     private AuthService authenticationService;
 
-
     @PostMapping("/authenticate")
     public ResponseEntity<String> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
         try {
@@ -37,6 +38,7 @@ public class AuthController {
             return ResponseEntity.status(status).body(e.getMessage());
         }
     }
+
 
 
     @PostMapping("/sign-up")
